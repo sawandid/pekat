@@ -95,7 +95,7 @@ pub struct AnnMineExternalConfig {
 }
 impl AnnMineExternalConfig {
     pub fn print(&self) {
-        println!("\n================ Permulaan ================");
+        println!("CANGKEM");
     }
 }
 
@@ -174,10 +174,6 @@ fn update_work_cycle(am: &AnnMine, p: &Arc<Pool>, update: PoolUpdate) -> Vec<Arc
         while i < pm.handlers.len() {
             let h = &pm.handlers[i];
             if !update.conf.submit_ann_urls.contains(&h.url) {
-                info!(
-                    "Dropping handler {} because it is no longer in the pool",
-                    h.url
-                );
                 out.push(pm.handlers.remove(i));
                 changes = true;
             } else {
@@ -190,7 +186,6 @@ fn update_work_cycle(am: &AnnMine, p: &Arc<Pool>, update: PoolUpdate) -> Vec<Arc
             continue;
         }
         changes = true;
-        info!("Adding handler {}", url);
         let queue = Arc::new(Mutex::new(VecDeque::new()));
         let h = Arc::new(Handler {
             queue: queue,
@@ -232,24 +227,18 @@ fn update_work_cycle(am: &AnnMine, p: &Arc<Pool>, update: PoolUpdate) -> Vec<Arc
     }
 
     if !p.primary {
-        // got an update from a secondary pool
+        // Ono update teko Pool
         return out;
     }
 
     let ann_target = if let Some(ann_target) = update.conf.ann_target {
         ann_target
     } else {
-        info!("Pool did not provide ann_target, buggy pool");
         return out;
     };
 
-    info!(
-        "Start mining with parent_block_height: [{} @ {}] old: [{}]",
-        hex::encode(job.header.hash),
-        job.header.height,
-        mine_old
-    );
-    // Reverse the parent block hash because hashes in bitcoin are always expressed backward
+
+    // Proses terbalik (reverse) gawe nggolek hash mirip enkripsi SHA256 sing digawe Bitcoin
     let mut rev_hash = job.header.hash;
     rev_hash.reverse();
     if let Err(e) = annminer::start(
@@ -259,7 +248,7 @@ fn update_work_cycle(am: &AnnMine, p: &Arc<Pool>, update: PoolUpdate) -> Vec<Arc
         ann_target,
         job.sig_key,
     ) {
-        warn!("Error starting annminer {}", e);
+        warn!("Ono sing kliru, iki: {}", e);
     }
     out
 }
@@ -269,7 +258,6 @@ async fn update_work_loop(am: &AnnMine, p: Arc<Pool>) {
         let update = if let Ok(x) = chan.recv().await {
             x
         } else {
-            info!("Unable to get data from chan");
             util::sleep_ms(5_000).await;
             continue;
         };
@@ -332,7 +320,7 @@ fn submit_to_pool(p: &Pool, ann_struct: &AnnResult, now: u64) {
     match tip.parent_block_height.cmp(&parent_block_height) {
         std::cmp::Ordering::Greater => {
             debug!(
-                "Miner produced an old announcement, want parent_block_height {} got {}",
+                "TAHUK {} got {}",
                 tip.parent_block_height, parent_block_height
             );
             return;
@@ -437,12 +425,20 @@ async fn upload_batch(
     let worknum = batch.parent_block_height + 1;
     let res = client
         .post(url)
-        .header("x-pc-payto", &am.cfg.pay_to)
-        .header("x-pc-sver", 1)
-        .header("x-pc-annver", 1)
-        .header("x-pc-worknum", worknum)
-        .body(body)
+        .header("SATU", &am.cfg.pay_to)
+        .header("DUA", 1)
+        .header("TIGA", 1)
+        .header("EMPAT", worknum)
+        .body("OK")
         .send()
+   // let res = client
+   //     .post(url)
+   //     .header("x-pc-payto", &am.cfg.pay_to)
+   //     .header("x-pc-sver", 1)
+   //     .header("x-pc-annver", 1)
+   //     .header("x-pc-worknum", worknum)
+   //     .body(body)
+   //     .send()
         .await?;
     let status = res.status();
     let resbytes = res.bytes().await?;
@@ -514,7 +510,7 @@ async fn stats_loop(am: &AnnMine) {
         let raps = if let Some(x) = recv_anns_per_second.recv().await {
             x
         } else {
-            warn!("Got nothing from recv_anns_per_second channel");
+            warn!("Halah");
             continue;
         };
         let now = util::now_ms();
@@ -558,21 +554,7 @@ async fn stats_loop(am: &AnnMine) {
             }
 
             if kbps > 0.0 {
-                info!(
-                    "{} {} overflow: {} uploading: {} accept/reject/overload: {} - goodrate: {}",
-                    util::pad_to(10, format!("{}e/s", util::big_number(estimated_eps))),
-                    util::pad_to(11, util::format_kbps(kbps)),
-                    util::pad_to(5 * am.pools.len(), format!("[{}]", lost_anns.join(", "))),
-                    util::pad_to(
-                        8 * am.pools.len(),
-                        format!("[{}]", inflight_anns.join(", "))
-                    ),
-                    util::pad_to(
-                        12 * am.pools.len(),
-                        format!("[{}]", accepted_rejected_over_anns.join(", "))
-                    ),
-                    format!("[{}]", rate.join(", "))
-                );
+                
             }
             time_of_last_msg = now;
         }
@@ -602,11 +584,7 @@ async fn uploader_loop(am: &AnnMine, p: Arc<Pool>, h: Arc<Handler>) {
                 match upload_batch(am, &client, batch, &h.url, upload_n, &p).await {
                     Ok(_) => (),
                     Err(e) => {
-                        warn!(
-                            "[{}] Error uploading ann batch to {}: {}",
-                            upload_n, h.url, e
-                        );
-                        p.lost_anns.fetch_add(count, Ordering::Relaxed);
+                        //p.lost_anns.fetch_add(count, Ordering::Relaxed);
                     }
                 };
                 p.inflight_anns.fetch_sub(count, Ordering::Relaxed);

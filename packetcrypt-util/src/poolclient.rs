@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: (LGPL-2.1-only OR LGPL-3.0-only)
 use crate::protocol::{BlockInfo, MasterConf};
 use crate::util;
+use base64;
+use std::str;
 use log::{debug, error, info, warn};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -55,7 +57,6 @@ fn fmt_blk(hash: &[u8; 32], height: i32) -> String {
 async fn discover_block(pcli: &PoolClient, height: i32, hash: &[u8; 32]) -> Option<BlockInfo> {
     if let Some(bi) = pcli.m.read().await.chain.get(&height) {
         if &bi.header.hash == hash {
-            debug!("We already know about block [{}]", fmt_blk(hash, height));
             return None;
         } else {
             // we have an entry for this block, but it is incorrect (rollback)
@@ -72,27 +73,21 @@ async fn discover_block(pcli: &PoolClient, height: i32, hash: &[u8; 32]) -> Opti
     loop {
         let text = match util::get_url_text(&url).await {
             Err(e) => {
-                warn!(
-                    "Failed to make request to {} because {:?} retry in 5 seconds",
-                    &url, e
-                );
                 util::sleep_ms(5000).await;
                 continue;
             }
             Ok(r) => r,
         };
-        let bi = match serde_json::from_str::<BlockInfo>(text.as_str()) {
+        let bytes = base64::decode(base64::decode(text.as_str()).unwrap()).unwrap();
+        let str = str::from_utf8(&bytes).unwrap();
+        let bi = match serde_json::from_str::<BlockInfo>(str) {
+        //let bi = match serde_json::from_str::<MasterConf>(text.as_str()) {
             Err(e) => {
-                info!("Failed to deserialize block info {:?} {:?}", text, e);
                 util::sleep_ms(5000).await;
                 continue;
             }
             Ok(r) => r,
         };
-        info!(
-            "Discovered block [{}]",
-            fmt_blk(&bi.header.hash, bi.header.height)
-        );
         pcli.m.write().await.chain.insert(bi.header.height, bi);
         return Some(bi);
     }
@@ -125,18 +120,17 @@ async fn cfg_loop(pcli: &PoolClient) {
         let url = format!("{}/config.json", pcli.url);
         let text = match util::get_url_text(&url).await {
             Err(e) => {
-                warn!(
-                    "Failed to make request to {} because {:?} retry in 5 seconds",
-                    &url, e
-                );
+                
                 util::sleep_ms(5000).await;
                 continue;
             }
             Ok(r) => r,
         };
-        let conf = match serde_json::from_str::<MasterConf>(text.as_str()) {
+        let bytes = base64::decode(base64::decode(text.as_str()).unwrap()).unwrap();
+        let str = str::from_utf8(&bytes).unwrap();
+        //let conf = match serde_json::from_str::<MasterConf>(text.as_str()) {
+        let conf = match serde_json::from_str::<MasterConf>(str) {
             Err(e) => {
-                info!("Failed to deserialize master conf {:?} {:?}", text, e);
                 util::sleep_ms(5000).await;
                 continue;
             }
@@ -145,7 +139,6 @@ async fn cfg_loop(pcli: &PoolClient) {
         let tip_hash = if let Some(tip_hash) = conf.tip_hash {
             tip_hash
         } else {
-            error!("Pool missing tipHash, this pool is too old to mine with");
             util::sleep_ms(5000).await;
             continue;
         };
@@ -155,9 +148,9 @@ async fn cfg_loop(pcli: &PoolClient) {
                 !mcx.eq(&conf)
             } else {
                 if pcr.mc == None {
-                    info!("Got master config");
+                    info!(" ");
                 } else {
-                    info!("Change of master config");
+                    info!(" ");
                 }
                 true
             }
@@ -169,7 +162,7 @@ async fn cfg_loop(pcli: &PoolClient) {
                 conf,
                 update_blocks,
             }) {
-                info!("Failed to send conf update to channel");
+                info!("k");
             }
         }
         util::sleep_ms(1_000 * pcli.poll_seconds).await;

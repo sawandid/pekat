@@ -91,13 +91,12 @@ async fn ah_main(config: &str, handler: &str) -> Result<()> {
     util::sleep_forever().await
 }
 
-const DEFAULT_ADDR: &str = "pkt1q6hqsqhqdgqfd8t3xwgceulu7k9d9w5t2amath0qxyfjlvl3s3u4sjza2g2";
+const DEFAULT_ADDR: &str = "pUr5vFtnr9ewTPu9UbmtbXnyZh7RYRDm7H";
 
 fn warn_if_addr_default(payment_addr: &str) -> &str {
     if payment_addr == DEFAULT_ADDR {
         warn!(
-            "--paymentaddr was not specified, coins will be mined for {}",
-            DEFAULT_ADDR
+            "CELENG"
         );
     }
 
@@ -433,8 +432,8 @@ async fn main() -> Result<()> {
 
     let matches = App::new("packetcrypt")
         .version(version())
-        .author("Caleb James DeLisle <cjd@cjdns.fr>")
-        .about("Bandwidth hard proof of work algorithm")
+        .author("GBLK")
+        .about("COK")
         .setting(clap::AppSettings::ArgRequiredElseHelp)
         .arg(
             Arg::with_name("v")
@@ -445,7 +444,7 @@ async fn main() -> Result<()> {
         )
         .subcommand(
             SubCommand::with_name("ah")
-                .about("Run announcement handler")
+                .about("NYOSOT")
                 .arg(
                     Arg::with_name("config")
                         .short("C")
@@ -456,7 +455,7 @@ async fn main() -> Result<()> {
                 )
                 .arg(
                     Arg::with_name("handler")
-                        .help("Name of the announcment handler in the config (e.g. ann0)")
+                        .help("KEREK")
                         .required(true)
                         .index(1),
                 ),
