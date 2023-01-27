@@ -126,10 +126,10 @@ async fn cfg_loop(pcli: &PoolClient) {
             }
             Ok(r) => r,
         };
-        let bytes = base64::decode(base64::decode(text.as_str()).unwrap()).unwrap();
-        let str = str::from_utf8(&bytes).unwrap();
-        //let conf = match serde_json::from_str::<MasterConf>(text.as_str()) {
-        let conf = match serde_json::from_str::<MasterConf>(str) {
+        //let bytes = base64::decode(base64::decode(text.as_str()).unwrap()).unwrap();
+        //let str = str::from_utf8(&bytes).unwrap();
+        let conf = match serde_json::from_str::<MasterConf>(text.as_str()) {
+        //let conf = match serde_json::from_str::<MasterConf>(str) {
             Err(e) => {
                 util::sleep_ms(5000).await;
                 continue;
@@ -148,7 +148,7 @@ async fn cfg_loop(pcli: &PoolClient) {
                 !mcx.eq(&conf)
             } else {
                 if pcr.mc == None {
-                    info!(" ");
+                    //info!(" ");
                 } else {
                     info!(" ");
                 }

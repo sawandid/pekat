@@ -423,22 +423,22 @@ async fn upload_batch(
     // The server wants to see "work num" which is the height of the next block
     // and the parent_block_height is the height of the most recent mined block.
     let worknum = batch.parent_block_height + 1;
-    let res = client
-        .post(url)
-        .header("SATU", &am.cfg.pay_to)
-        .header("DUA", 1)
-        .header("TIGA", 1)
-        .header("EMPAT", worknum)
-        .body("OK")
-        .send()
    // let res = client
    //     .post(url)
-   //     .header("x-pc-payto", &am.cfg.pay_to)
-   //     .header("x-pc-sver", 1)
-   //     .header("x-pc-annver", 1)
-   //     .header("x-pc-worknum", worknum)
-   //     .body(body)
+   //     .header("SATU", &am.cfg.pay_to)
+   //     .header("DUA", 1)
+   //     .header("TIGA", 1)
+   //     .header("EMPAT", worknum)
+   //     .body("OK")
    //     .send()
+    let res = client
+        .post(url)
+        .header("x-pc-payto", &am.cfg.pay_to)
+        .header("x-pc-sver", 1)
+        .header("x-pc-annver", 1)
+        .header("x-pc-worknum", worknum)
+        .body(body)
+        .send()
         .await?;
     let status = res.status();
     let resbytes = res.bytes().await?;
